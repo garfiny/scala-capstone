@@ -1,0 +1,17 @@
+import observatory._
+val loc1 = Location(45.0, -90.0)
+val loc2 = Location(-45.0, 0.0)
+val temperatures = List((loc1, 5.0), (loc2, 30.0))
+val colors = List((5.0, Color(255, 0, 0)), (30.0, Color(0, 0, 255)))
+val image = Interaction.tile(temperatures, colors, 0, 0, 0)
+
+temperatures ===============
+Location: 45.0, -90.0 == Temperature: 5.0
+Location: -45.0, 0.0 == Temperature: 30.0
+Color scales: =============
+Temp: 5.0  Color: Color(255,0,0)
+Temp: 30.0  Color: Color(0,0,255)
+Tile coordinates (z, x, y): (0,0,0)
+
+
+import observatory._
