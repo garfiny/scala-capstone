@@ -58,7 +58,7 @@ object Visualization {
     * @return The color that corresponds to `value`, according to the color scale defined by `points`
     */
     def interpolateColor(points: Iterable[(Double, Color)], value: Double): Color = {
-      val samePoint = points.find(_._1 == value).map(_._2)
+      val samePoint = points.find(t => abs(t._1 - value) <= 0.1).map(_._2)
       if (samePoint.isDefined) {
         samePoint.get
       } else {

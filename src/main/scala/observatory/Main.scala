@@ -15,5 +15,5 @@ object Main extends App {
 
   val records = Extraction.locateTemperatures(2021, "/mystations.csv", "/2021.csv")
   val temperatures = Extraction.locationYearlyAverageRecords(records)
-  val image = Interaction.tile(temperatures, colorScales, 0, 1, 1)
+  val image = Interaction.tile(temperatures, colorScales, 8, 10, 10)
 }

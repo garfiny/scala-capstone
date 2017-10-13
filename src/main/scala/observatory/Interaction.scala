@@ -45,44 +45,39 @@ object Interaction {
     */
   def tile(temperatures: Iterable[(Location, Double)], colors: Iterable[(Double, Color)], zoom: Int, x: Int, y: Int): Image = {
     val location = tileLocation(zoom, x, y)
-    // ========================
-    println("Tile coordinates (x, y, z): (" + x + "," + y + "," + zoom + ") === Location: " + location)
-    println("temperatures ===============")
-    temperatures.foreach(t => {
-      println("Location: (" + t._1.lat + ", " + t._1.lon + ") == TEMP: " + t._2 )
-    })
-    println("Color scales: =============")
-    colors.foreach(c => println("Temp: " + c._1 + "  Color: " + c._2))
-    // ========================
-
     val temperature = predictTemperature(temperatures, location)
     val interpolatedColor = interpolateColor(colors, temperature)
-    println("predicted =================")
-    println("TEMP: " + temperature + "  === Color: " + interpolatedColor)
+    // ========================
+    // println("Tile coordinates (x, y, z): (" + x + "," + y + "," + zoom + ") === Location: " + location)
+    // println("temperatures ===============")
+    // temperatures.foreach(t => {
+    //   println("Location: (" + t._1.lat + ", " + t._1.lon + ") == TEMP: " + t._2 )
+    // })
+    // println("Color scales: =============")
+    // colors.foreach(c => println("Temp: " + c._1 + "  Color: " + c._2))
+    // println("predicted =================")
+    // println("TEMP: " + temperature + "  === Color: " + interpolatedColor)
+    // ========================
 
-    val temperaturesMap = Map() ++ ((location, temperature) :: temperatures.toList).map(t => (locationToTile(t._1, zoom) -> interpolateColor(colors, t._2)))
+    // val temperaturesMap = Map() ++ temperatures.map(t => (locationToTile(t._1, zoom) -> interpolateColor(colors, t._2)))
     val array = Array.ofDim[Pixel](256, 256)
     for (
-         i <- 0 until 256;
-         j <- 0 until 256
+         i <- 0 until 256; // y == row
+         j <- 0 until 256  // x == column
        ) {
-         val color = if (temperaturesMap.contains((i, j))) {
-           temperaturesMap((i, j))
+         val color = if (x == j && y == i) {
+           interpolatedColor
          } else {
-           val loc = tileLocation(zoom + 1, i, j)
+           val loc = tileLocation(zoom, j, i)
            val temp = predictTemperature(temperatures, loc)
            interpolateColor(colors, temp)
          }
          val pixel = Pixel(color.red, color.green, color.blue, 127)
-         array(j)(i) = pixel
+         array(i)(j) = pixel
        }
     val image = Image(256, 256, array.flatten)
     image.output(new java.io.File("target/interactive_image.png"))
     image
-  }
-
-  def convertToTopLevelCoor(zoom: Int, x: Int, y: Int): (Int, Int) = {
-    (rint(pow(2, 8 - zoom) * x).asInstanceOf[Int], rint(pow(2, 8 - zoom) * y).asInstanceOf[Int])
   }
 
   /**
@@ -96,17 +91,21 @@ object Interaction {
     yearlyData: Iterable[(Int, Data)],
     generateImage: (Int, Int, Int, Int, Data) => Unit
   ): Unit = {
-    ???
+    yearlyData.par.foreach(yd => {
+      val year = yd._1
+      val data = yd._2
+      (0 to 3).par.foreach(zoom => {
+        for (
+             row <- (0 until 1 << zoom);
+             col <- (0 until 1 << zoom)
+           ) {
+             val (x, y) = (col, row)
+             generateImage(year, zoom, x, y, data)
+             // val filepath = f"target/temperatures/$year/$zoom/$x-$y.png"
+             // image.output(new java.io.File(filepath))
+           }
+      })
+    })
+    // type Data = Iterable[(Location, Double)] 
   }
-
-  def gpsToCoordinate(location: Location): (Int, Int) = {
-    val lon = rint(location.lon).asInstanceOf[Int]
-    val lat = rint(location.lat).asInstanceOf[Int]
-    (90 - lat, 180 + lon)
-  }
-
-  def coordindatesToGps(row: Int, column: Int): Location = {
-    Location(90 - row, column - 180)
-  }
-
 }
